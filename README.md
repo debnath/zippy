@@ -1,49 +1,59 @@
 # zippy
 
-Zippy is intended as a simple way to let you switch between different compression / decompression formats for []byte
-streams.
+Zippy is intended to be a simple way to let you compress and decompress []byte streams in different compression formats.
+
+It is useful for giving you the option to switch compression types by changing a very simple config.  E.g. if you need 
+more disk space for your redis caching, but don't want to pay for a bigger instance... you could swap a less 
+CPU-performant compression format for a more disk-efficient format with about 10 seconds of development effort.
 
 I started it as my use case required a CPU performant way to reduce redis disk size, which required experimenting with
 the different formats such as Snappy and Gzip to find the best fit. Hopefully making a module that does this for you
 makes life a little easier for you.
 
 Eventual goal is to support all the compression formats, but for now it supports:
-    - snappy
-    - gzip
-    - none    
+   * snappy
+   * gzip
+   * none
 
-USAGE:    
+## Getting Started
 
-	content := []byte("test string for compression")
-
-	zippy := zippy.New(zippy.Config{
-		CompressionFormat: "snappy",
-	})
-		
-	//Zipping
-	zp := zippy.Zip(content)
-
-	//Unzipping
-	uz, _ := zippy.Unzip(zp)
-
-	fmt.Println("unzipped string:", string(uz[:]))
-
-    ________________________________________________
-    
-
-    A more practical example would be if you were to say, change your redigo wrappers 
-    E.g. your SET methods could be changed like so:
-    //BEFORE
-    _, err := conn.Do("SET", key, content, "EX", 300)
-    
-
-    //AFTER!
-    zippy := zippy.New(zippy.Config{
+Initialise zippy by choosing your compression format:
+```
+    zpy := zippy.New(zippy.Config{
         CompressionFormat: "snappy",
+        //CompressionFormat: "gzip",
+        //CompressionFormat: "none",
     })
-    	
-    _, err := conn.Do("SET", key, zippy.Zip(content), "EX", 300)
-     
-    And you would correspondingly replace "GET" redis commands to use zippy.Unzip().
-    The only difference is that unzipping also returns a second err param, so that 
-    needs to be handled first.
+    
+    //consts such as zippy.COMPRESSION_SNAPPY exist if you prefer that.
+```
+
+Take your []byte stream, and compress it like so:
+```
+    content := []byte("test string for compression")
+    cmpr := zpy.Compress(content)
+```
+
+Now you can decompress the compressed content like so:
+```
+    dcmp, _ := zpy.Decompress(cmpr)
+    fmt.Println("Decompressed string: ", string(dcmp[:]))
+
+```
+
+A more practical example would be if you were to say, change your redigo GET/SET wrappers.
+
+So if your redigo SET methods looked something like this: 
+```
+    _, err := conn.Do("SET", key, content, "EX", 300)
+```
+    
+You would swap in the content []byte stream like so:
+``` 
+    cmprContent, _ := zpy.Compress(content)
+    _, err := conn.Do("SET", key, cmprContent, "EX", 300)
+```
+      
+Likewise, for your  "GET" redigo wrappers, you would use zpy.Decompress() instead of zpy.Compress().
+    
+Simple!  You can `redis-cli --bigkeys` afterwards to compare disk space before and after. 

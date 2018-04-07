@@ -1,14 +1,15 @@
 package zippy
 
 import (
-	"github.com/debnath/zippy/src/alg"
 	"strings"
+
+	"github.com/debnath/zippy/src/alg"
 )
 
 const (
 	COMPRESSION_SNAPPY = "snappy"
-	COMPRESSION_GZIP = "gzip"
-	COMPRESSION_NONE = "none"
+	COMPRESSION_GZIP   = "gzip"
+	COMPRESSION_NONE   = "none"
 )
 
 type Config struct {
@@ -16,15 +17,17 @@ type Config struct {
 }
 
 type Zippy struct {
-	Zip func([]byte) []byte
-	Unzip func([]byte) ([]byte, error)
+	Compress   func([]byte) ([]byte, error)
+	Decompress func([]byte) ([]byte, error)
 }
 
-func New(c Config) Zippy{
+func New(c Config) Zippy {
 	var cmp alg.Compression
 	switch strings.ToLower(c.CompressionFormat) {
 	case COMPRESSION_SNAPPY:
 		cmp = alg.SnappyCompression{}
+	case COMPRESSION_GZIP:
+		cmp = alg.GzipCompression{}
 	case COMPRESSION_NONE:
 		cmp = alg.NoCompression{}
 	default:
@@ -32,26 +35,8 @@ func New(c Config) Zippy{
 	}
 
 	z := Zippy{}
-	z.Zip = cmp.Zip
-	z.Unzip = cmp.Unzip
+	z.Compress = cmp.Compress
+	z.Decompress = cmp.Decompress
 
 	return z
 }
-
-/*
-func main() {
-	content := []byte("test string for compression")
-
-	zippy := New(Config{
-		CompressionFormat: "none",
-	})
-
-	//Zipping
-	zp := zippy.Zip(content)
-
-	//Unzipping
-	uz, _ := zippy.Unzip(zp)
-
-	fmt.Println("unzipped string:", string(uz[:]))
-}
-*/

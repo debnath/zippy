@@ -5,6 +5,8 @@ import (
 
 	"reflect"
 
+	"fmt"
+
 	"github.com/debnath/zippy"
 )
 
@@ -18,12 +20,12 @@ func assertEqual(t *testing.T, exp interface{}, act interface{}, msg string) {
 func TestSnappy(t *testing.T) {
 	b := []byte("testing snappy")
 
-	zippy := zippy.New(zippy.Config{
+	zpy := zippy.New(zippy.Config{
 		CompressionFormat: zippy.COMPRESSION_SNAPPY,
 	})
 
-	z := zippy.Zip(b)
-	unzp, err := zippy.Unzip(z)
+	z, _ := zpy.Compress(b)
+	unzp, err := zpy.Decompress(z)
 
 	expected := b
 	actual := unzp
@@ -32,29 +34,88 @@ func TestSnappy(t *testing.T) {
 	assertEqual(t, err, nil, "SNAPPY error is nil")
 }
 
+//Snappy errors out if you try to decompress nil values... needs some investigation
 func TestSnappyNil(t *testing.T) {
-	zippy := zippy.New(zippy.Config{
+	zpy := zippy.New(zippy.Config{
 		CompressionFormat: zippy.COMPRESSION_SNAPPY,
 	})
 
-	zp := zippy.Zip(nil)
-	unzp, err := zippy.Unzip(zp)
+	cmpr, err := zpy.Compress(nil)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	dcmp, errd := zpy.Decompress(cmpr)
+
+	if errd != nil {
+		fmt.Println(errd.Error())
+	}
 	nilBytes := []byte(nil)
 
-	assertEqual(t, nilBytes, zp, "SNAPPY zipped with nil input")
-	assertEqual(t, nilBytes, unzp, "SNAPPY unzipped with nil input")
-	assertEqual(t, nil, err, "SNAPPY err is nil with nil input")
+	assertEqual(t, nilBytes, cmpr, "SNAPPY compressed with nil input")
+	assertEqual(t, nilBytes, dcmp, "SNAPPY decompressed with nil input")
+	assertEqual(t, nil, err, "SNAPPY compress err is nil with nil input")
+	assertEqual(t, nil, errd, "SNAPPY decompress err is nil with nil input")
+
+}
+
+func TestGzip(t *testing.T) {
+	b := []byte("testing gzip")
+
+	zpy := zippy.New(zippy.Config{
+		CompressionFormat: zippy.COMPRESSION_GZIP,
+	})
+
+	cmpr, err := zpy.Compress(b)
+
+	if err != nil {
+		fmt.Println("error on compression", err.Error())
+	}
+	dcmp, errd := zpy.Decompress(cmpr)
+	if err != nil {
+		fmt.Println("error on decompression", errd.Error())
+	}
+	expected := b
+	actual := dcmp
+
+	assertEqual(t, string(expected[:]), string(actual[:]), "GZIP can compress and decompress byte string")
+	assertEqual(t, err, nil, "GZIP no error when compressing")
+	assertEqual(t, errd, nil, "GZIP no error when decompressing")
+
+}
+
+//gzip does not error out when compressing or decompression nil values... so there is no nil handling
+func TestGzipNil(t *testing.T) {
+	zpy := zippy.New(zippy.Config{
+		CompressionFormat: zippy.COMPRESSION_GZIP,
+	})
+
+	cmpr, err := zpy.Compress(nil)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	unzp, errd := zpy.Decompress(cmpr)
+	if errd != nil {
+		fmt.Println(errd.Error())
+	}
+
+	nilBytes := []byte(nil)
+
+	assertEqual(t, nilBytes, unzp, "GZIP decompressed with nil input")
+	assertEqual(t, nil, errd, "GZIP err is nil with COMPRESSING nil input")
+	assertEqual(t, nil, errd, "GZIP err is nil with DECOMPRESSING nil input")
 }
 
 func TestNone(t *testing.T) {
 	b := []byte("testing no compression")
 
-	zippy := zippy.New(zippy.Config{
+	zpy := zippy.New(zippy.Config{
 		CompressionFormat: zippy.COMPRESSION_NONE,
 	})
 
-	z := zippy.Zip(b)
-	unzp, err := zippy.Unzip(z)
+	z, _ := zpy.Compress(b)
+	unzp, err := zpy.Decompress(z)
 
 	expected := b
 	actual := unzp
@@ -64,15 +125,15 @@ func TestNone(t *testing.T) {
 }
 
 func TestNoneNil(t *testing.T) {
-	zippy := zippy.New(zippy.Config{
+	zpy := zippy.New(zippy.Config{
 		CompressionFormat: zippy.COMPRESSION_NONE,
 	})
 
-	zp := zippy.Zip(nil)
-	unzp, err := zippy.Unzip(zp)
+	zp, _ := zpy.Compress(nil)
+	unzp, err := zpy.Decompress(zp)
 	nilBytes := []byte(nil)
 
-	assertEqual(t, nilBytes, zp, "NO COMPRESSION zipped with nil input")
-	assertEqual(t, nilBytes, unzp, "NO COMPRESSION unzipped with nil input")
+	assertEqual(t, nilBytes, zp, "NO COMPRESSION compressed with nil input")
+	assertEqual(t, nilBytes, unzp, "NO COMPRESSION decompressed with nil input")
 	assertEqual(t, nil, err, "NO COMPRESSION err is nil with nil input")
 }
