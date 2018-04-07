@@ -3,12 +3,8 @@
 Zippy is intended to be a simple way to let you compress and decompress []byte streams in different compression formats.
 
 It is useful for giving you the option to switch compression types by changing a very simple config.  E.g. if you need 
-more disk space for your redis caching, but don't want to pay for a bigger instance... you could swap a less 
-CPU-performant compression format for a more disk-efficient format with about 10 seconds of development effort.
-
-I started it as my use case required a CPU performant way to reduce redis disk size, which required experimenting with
-the different formats such as Snappy and Gzip to find the best fit. Hopefully making a module that does this for you
-makes life a little easier for you.
+more disk space for your redis caching, but don't want to pay for a bigger AWS instance... you could easily swap a less 
+CPU-performant compression format for a more disk-efficient format with a simple config change.
 
 Eventual goal is to support all the compression formats, but for now it supports:
    * snappy
@@ -48,7 +44,7 @@ So if your redigo SET methods looked something like this:
     _, err := conn.Do("SET", key, content, "EX", 300)
 ```
     
-You would swap in the content []byte stream like so:
+You would swap out the content []byte stream like so:
 ``` 
     cmprContent, _ := zpy.Compress(content)
     _, err := conn.Do("SET", key, cmprContent, "EX", 300)
