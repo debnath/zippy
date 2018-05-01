@@ -16,9 +16,9 @@ type Config struct {
 	CompressionFormat string
 }
 
-type Zippy struct {
-	Compress   func([]byte) ([]byte, error)
-	Decompress func([]byte) ([]byte, error)
+type Zippy interface {
+	Compress([]byte) ([]byte, error)
+	Decompress([]byte) ([]byte, error)
 }
 
 func New(c Config) Zippy {
@@ -34,9 +34,5 @@ func New(c Config) Zippy {
 		cmp = alg.SnappyCompression{}
 	}
 
-	z := Zippy{}
-	z.Compress = cmp.Compress
-	z.Decompress = cmp.Decompress
-
-	return z
+	return cmp
 }

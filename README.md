@@ -27,7 +27,7 @@ Initialise zippy by choosing your compression format:
 Take your []byte stream, and compress it like so:
 ```
     content := []byte("test string for compression")
-    cmpr := zpy.Compress(content)
+    cmpr, _ := zpy.Compress(content)
 ```
 
 Now you can decompress the compressed content like so:
@@ -36,6 +36,8 @@ Now you can decompress the compressed content like so:
     fmt.Println("Decompressed string: ", string(dcmp[:]))
 
 ```
+
+### Practical example
 
 A more practical example would be if you were to say, change your redigo GET/SET wrappers.
 

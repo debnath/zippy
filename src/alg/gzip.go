@@ -10,17 +10,11 @@ import (
 type GzipCompression struct{}
 
 func (c GzipCompression) Compress(data []byte) ([]byte, error) {
-
-	/*
-		if data == nil {
-			return nil, nil
-		}
-	*/
-
 	var buf bytes.Buffer
 
 	//need to pass in the bytes.Buffer in this way...the io.Writer interface screws it up if we try to instantiate it inline
 	err := gzipWrite(&buf, data)
+
 	if err != nil {
 		return nil, err
 	}
@@ -29,18 +23,14 @@ func (c GzipCompression) Compress(data []byte) ([]byte, error) {
 }
 
 func (c GzipCompression) Decompress(data []byte) ([]byte, error) {
-	/*
-		if data == nil {
-			return nil, nil
-		}
-	*/
-
 	var buf bytes.Buffer
 
 	err := gunzipWrite(&buf, data)
+
 	if err != nil {
 		return nil, err
 	}
+	//buf.Write(data)
 
 	return buf.Bytes(), nil
 }

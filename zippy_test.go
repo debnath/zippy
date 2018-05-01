@@ -67,20 +67,19 @@ func TestGzip(t *testing.T) {
 	})
 
 	cmpr, err := zpy.Compress(b)
-
 	if err != nil {
 		fmt.Println("error on compression", err.Error())
 	}
 	dcmp, errd := zpy.Decompress(cmpr)
-	if err != nil {
+
+	if errd != nil {
 		fmt.Println("error on decompression", errd.Error())
 	}
-	expected := b
-	actual := dcmp
 
-	assertEqual(t, string(expected[:]), string(actual[:]), "GZIP can compress and decompress byte string")
 	assertEqual(t, err, nil, "GZIP no error when compressing")
 	assertEqual(t, errd, nil, "GZIP no error when decompressing")
+	assertEqual(t, string(b[:]), string(dcmp[:]), "GZIP can compress and decompress byte string")
+
 
 }
 
@@ -103,7 +102,7 @@ func TestGzipNil(t *testing.T) {
 	nilBytes := []byte(nil)
 
 	assertEqual(t, nilBytes, unzp, "GZIP decompressed with nil input")
-	assertEqual(t, nil, errd, "GZIP err is nil with COMPRESSING nil input")
+	assertEqual(t, nil, err, "GZIP err is nil with COMPRESSING nil input")
 	assertEqual(t, nil, errd, "GZIP err is nil with DECOMPRESSING nil input")
 }
 
